@@ -29,6 +29,8 @@ directions = dict(P=(10, 20, 9, 11),
                   Q=(-9, 11, 9, -11, -10, 1, 10, -1),
                   K=(-9, 11, 9, -11, -10, 1, 10, -1))
 
+put = lambda board, i, p: board[:i] + p + board[i + 1:]     # adds piece p at position i
+
 
 class Position(namedtuple('Position', 'board wc bc ep kp')):
     """ A state of a chess game
@@ -42,22 +44,29 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
 
     def gen_moves(self):
         # Search for all possible moves
-        # Only works for white pieces, rotate the board to search black moves
+        # Only works for white pieces, rotate the board and upper/lower case
+        # the figurines to search black moves
+        
+        #derefer all vars that don't change inside the loops
+        wc0 = self.wc[0]
+        wc1 = self.wc[1]
         piecelist = ((i, p) for i, p in enumerate(self.board) if p.isupper())   # gets all white pieces
         for i, p in piecelist:  # i = position, p = piece
             for d in directions[p]:     # d = directions for piece p
                 for j in count(i + d, d):   # generator that counts up/down from i+d until infinity, j = coordinate
                     q = self.board[j]       # checks what's on j
-                    if self.board[j] == ' ': break  # if j is out of the bounds: break
-                    if i == A1 and q == 'K' and self.wc[0]: yield (j, j - 2)    # if a rook can reach the king
-                    if i == H1 and q == 'K' and self.wc[1]: yield (j, j + 2)    # and castling is true, castle
+                    if q == ' ': break  # if j is out of the bounds: break
+                    if i == A1 and q == 'K' and wc0: yield (j, j - 2)    # if a rook can reach the king
+                    if i == H1 and q == 'K' and wc1: yield (j, j + 2)    # and castling is true, castle
                     if q.isupper(): break   # no friendly captures
-                    # pawn is not allowed to move diagonally if the target es empty
-                    if p == 'P' and d in (9, 11) and q == '.' and j not in (self.ep, self.kp): break
-                    # pawn is not allowed to move forward if the target is filled
-                    if p == 'P' and d in (10, 20) and q != '.': break
-                    # pawn is not allowed to double step if he's not on the b-row or the square in front is filed
-                    if p == 'P' and d == 20 and (i > 40 or self.board[j - 10] != '.'): break
+                    # pawn is not allowed to:
+                    if p == 'P':
+                        # move diagonally if the target es empty
+                        if d in (9, 11) and q == '.' and j not in (self.ep, self.kp): break
+                        # move forward if the target is filled
+                        if d in (10, 20) and q != '.': break
+                        # double step if he's not on the b-row or the square in front is filed
+                        if d == 20 and (i > 40 or self.board[j - 10] != '.'): break
 
                     yield (i, j)    # move!
 
@@ -73,7 +82,8 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
         # Move a piece
         i, j = move     # start and target coordinates of the move
         p, q = self.board[i], self.board[j]     # what is on these positions
-        put = lambda board, i, p: board[:i] + p + board[i + 1:]     # adds piece p at position i
+        # previous put location
+        global put
         board = self.board                          # Copy variables and reset ep and kp
         wc, bc, ep, kp = self.wc, self.bc, 0, 0     # Copy variables and reset ep and kp
 
@@ -93,16 +103,16 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
                 board = put(board, kp, 'R')                     # the rook moves to the kp position
 
         if p == 'P':    # special pawn rules
-            if 90 < j < 100:    # if the pawn reaches the last row, he becomes a queen
+            if 90 < j:    # if the pawn reaches the last row, he becomes a queen
                 board = put(board, j, 'Q')  # TODO decide what the pawn becomes
-            if j - i == 20:     # if the pawn double steps, an en passant square is created
+            if (j - i) == 20:     # if the pawn double steps, an en passant square is created
                 ep = i + 10
-            if j - i in (9, 11) and q == '.':   # if target is empty, the pawn moves forewards
-                board = put(board, j - 10, '.')
+            #if (j - i) in (9, 11) and q == '.':   # if target is empty, the pawn moves forewards WHAT??
+            #    board = put(board, j - 10, '.')
 
         return Position(board, wc, bc, ep, kp).rotate()  # the board is rotated for the next player
 
-
+# make this a generator increases performance by a bit
 def nextLayer(pos):
     moves = pos.gen_moves()
     results = []
@@ -113,7 +123,7 @@ def nextLayer(pos):
 
 if __name__ == '__main__':
     start = time()
-    positions = [Position(initial, [True, True], [True, True], 0, 0)]
+    positions = [Position(initial, (True, True), (True, True), 0, 0)]
     depth = 4
     for i in range(depth):
         temp = []
