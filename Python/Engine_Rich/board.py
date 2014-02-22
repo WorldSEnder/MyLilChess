@@ -41,7 +41,7 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
     ep - the en passant square
     kp - the king passant square
     """
-
+    
     def gen_moves(self):
         # Search for all possible moves
         # Only works for white pieces, rotate the board and upper/lower case
@@ -67,17 +67,17 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
                         if d in (10, 20) and q != '.': break
                         # double step if he's not on the b-row or the square in front is filed
                         if d == 20 and (i > 40 or self.board[j - 10] != '.'): break
-
+                    
                     yield (i, j)    # move!
-
+                    
                     if p in ('P', 'N', 'K'): break  # these are only allowed to single move
                     if q.islower(): break  # stop after capture
-
+    
     def rotate(self):
         # Rotates the board, white becomes black and reverse
         return Position(
             self.board[::-1].swapcase(), self.bc, self.wc, 119 - self.ep, 119 - self.kp)
-
+    
     def move(self, move):
         # Move a piece
         i, j = move     # start and target coordinates of the move
@@ -86,22 +86,22 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
         global put
         board = self.board                          # Copy variables and reset ep and kp
         wc, bc, ep, kp = self.wc, self.bc, 0, 0     # Copy variables and reset ep and kp
-
+        
         board = put(board, j, board[i])     # do the move
         board = put(board, i, '.')          # do the move
-
+        
         if i == A1: wc = (False, wc[1])     # if A1 rook moves, no long castling
         if i == H1: wc = (wc[0], False)     # if H1 rook moves, no short castling
         if j == A8: bc = (bc[0], False)     # if black rook is captured, no castling
         if j == H8: bc = (False, bc[1])     # if black rook is captured, no castling
-
+        
         if p == 'K':
             wc = (False, False)             # if king moves, no castling any more
             if abs(j - i) == 2:             # if king moves two squares, he's castling
                 kp = (i + j) // 2           # the king passant square is between the start and the target
                 board = put(board, A1 if j < i else H1, '.')    # A1/H1 are empty
                 board = put(board, kp, 'R')                     # the rook moves to the kp position
-
+        
         if p == 'P':    # special pawn rules
             if 90 < j:    # if the pawn reaches the last row, he becomes a queen
                 board = put(board, j, 'Q')  # TODO decide what the pawn becomes
@@ -109,7 +109,7 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
                 ep = i + 10
             #if (j - i) in (9, 11) and q == '.':   # if target is empty, the pawn moves forewards WHAT??
             #    board = put(board, j - 10, '.')
-
+        
         return Position(board, wc, bc, ep, kp).rotate()  # the board is rotated for the next player
 
 # make this a generator increases performance by a bit
