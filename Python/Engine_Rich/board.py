@@ -112,12 +112,11 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
         
         return Position(board, wc, bc, ep, kp).rotate()  # the board is rotated for the next player
 
+
 # make this a generator increases performance by a bit
-def nextLayer(pos):
+def next_layer(pos):
     moves = pos.gen_moves()
-    results = []
-    for i in moves:
-        results.append(pos.move(i))
+    results = [pos.move(i) for i in moves]
     return results
 
 
@@ -128,7 +127,7 @@ if __name__ == '__main__':
     for i in range(depth):
         temp = []
         for pos in positions:
-            temp.extend(nextLayer(pos))
+            temp.extend(next_layer(pos))
         positions = temp
-        print("DEPTH:", i+1, "   MOVES FOUND:", len(positions))
-    print("Needed", round(time() - start, 2), "Seconds to calculate", depth, "Layers.")
+        print "DEPTH:", i+1, "   MOVES FOUND:", len(positions)
+    print "Needed", round(time() - start, 2), "Seconds to calculate", depth, "Layers."
