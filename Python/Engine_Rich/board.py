@@ -1,5 +1,6 @@
 __author__ = 'TurnTheTideTM'
-
+__version__ = 0.1
+# For Python 2.7
 
 from collections import namedtuple
 from itertools import count
