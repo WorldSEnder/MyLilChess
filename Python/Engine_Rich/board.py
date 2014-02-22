@@ -115,9 +115,8 @@ class Position(namedtuple('Position', 'board wc bc ep kp')):
 
 # make this a generator increases performance by a bit
 def next_layer(pos):
-    moves = pos.gen_moves()
-    results = [pos.move(i) for i in moves]
-    return results
+    for m in pos.gen_moves():
+        yield pos.move(m)
 
 
 if __name__ == '__main__':
