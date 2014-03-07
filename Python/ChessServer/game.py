@@ -1,101 +1,128 @@
 """
 Created on 21.02.2014
 
-@author: Carbon
+@author: WorldSEnder
 """
+from responseCodes import GAME_JOINED_SPECTATOR, GAME_JOINED_UNSUCCESFUL,\
+    GAME_STATE_SPECTATOR_JOIN
+__author__ = "WorldSEnder"
+__version__ = 0.1
+
 from threading import Thread
-from funcutils import static_var
-from responseCodes import MOVE_RESULT_SUCCESS, MOVE_RESULT_ERROR
+from utils import static_var
 MOVE_PLAYER_WHITE = 0
 MOVE_PLAYER_BLACK = 1
 
+cleanBoard = (".........." +
+              ".........." +
+              ".RKB+QBKR." +
+              ".PPPPPPPP." +
+              ".........." +
+              ".........." +
+              ".........." +
+              ".........." +
+              ".pppppppp." +
+              ".rkb+qbkr." +
+              ".........." +
+              ".........." )
+
 class Game(Thread):
+    """
+    Represents a game, is a self-running thread
+    """
     @static_var('nextId', 0)
     @staticmethod
-    def requestNextGameId():
+    def requestNextGameId(cls):
         retid = requestNextGameId.nextId
         requestNextGameId.nextId += 1
         return retid
-    """
-    classdocs
-    """    
+    
     def __init__(self, playerWhite, playerBlack):
-        '''
+        """
         Constructor
-        '''
+        """
         # contains the two players and the spectators
         self._players = [playerWhite, playerBlack]
         self.inProgress = True
         self.movingPlayer = MOVE_PLAYER_WHITE
         self.history = History()
         self.gameId = Game.requestNextGameId()
-        
+        self.board = cleanBoard
+    
     def run(self):
         while self.inProgress:
-            pass
-        
-    def clientJoin(self, player):
-        player.gameId = self.gameId
-        player.mode = min(len(self._players), 2)
-        
-    def handleMoveRequest(self, playerMoving, move):
-        if (playerMoving ^ self.movingPlayer):
-            return
-        # valid player
-        moveResult = self._move(playerMoving, move)
-        self.afterMove(playerMoving, move, moveResult)
-        
-    def _move(self, playerMoving, move, revert=False):
-        '''
-        emulates the current move on the board.
-        Returns an respondcode - 200 success
-        '''
-        if revert:
-            raise NotImplementedError()
-        
-        if not self.inProgress:
-            return 404
-        return 200
+            for client in self._players[:]:
+                line = client.readLine()
+                self.handleLine(line, client)
+            del client
+        return
     
-    def afterMove(self, movingPlayer, move, moveResult):
-        '''
-        Notifies all players about the 
-        '''
-        # send the result to the player who sent it
-        self._players[movingPlayer].sendResult(moveResult)
-        # if it was a success 
-        if (moveResult >= MOVE_RESULT_SUCCESS) and (moveResult < MOVE_RESULT_ERROR):
-            # switch to the other player, it's his turn
-            self.movingPlayer = not movingPlayer
-            # append the move to the history
-            self.history.append(move)
-            # then send the move aswell
-            for playerSpec in self._players:
-                playerSpec.sendMove(move)
-                
+    def handleLine(self, line, client):
+        """
+        Handles a single line coming from the client
+        """
+        if not self.inProgress:
+            return
+        raise NotImplementedError()
+    
+    def spectatorJoin(self, spectator):
+        """
+        Joins a spectator into the game. 
+        """
+        if not self.inProgress:
+            spectator.sendCode(GAME_JOINED_UNSUCCESFUL)
+            return False
+        nameList = []
+        for client in self._players:
+            client.sendCode(GAME_STATE_SPECTATOR_JOIN, spectator.getName())
+            nameList.append(client.getName())
+        del client
+        spectator.sendCode(GAME_JOINED_SPECTATOR, *nameList)
+        return
+    
+    def _move(self, playerMoving, move):
+        """
+        emulates the current move on the board.
+        Returns a result as a response-code - look at .responseCodes
+        """
+        raise NotImplementedError()
+    
+    def interrupt(self):
+        """
+        Interrupts the game, sending a terminate signal to all 
+        clients
+        """
+        raise NotImplementedError()
+
 class History:
-    '''
+    """
     Represents a game-history
-    '''
+    """
     def __init__(self):
         self._backingArray = []
-        
+    
     def _pairs(self):
         i = iter(self._backingArray)
         for a in i:
             yield (a, next(i, ''))
-            
+        del a
+        return
+    
     def _enum(self):
         i = iter(self._backingArray)
         for idx, a in enumerate(i):
             yield (idx, (a, next(i, '')))
-        
+        del idx, a
+        return
+    
     def append(self, item):
         self._backingArray.append(item)
-        
+        return
+    
     def clear(self):
         self._backingArray.clear()
-        
+        return
+    
     def copy(self):
         h = History()
         h._backingArray = self._backingArray.copy()
@@ -106,26 +133,31 @@ class History:
     
     def extend(self, iterable):
         self._backingArray.extend(iterable)
-        
+        return
+    
     def index(self, value, start=None, stop=None):
         return self._backingArray.index(value, start, stop)
-        
+    
     def insert(self, index, obj):
         self._backingArray.insert(index, obj)
-        
+        return
+    
     def pop(self, index=-1):
         self._backingArray.pop(index)
-        
+        return
+    
     def remove(self, value):
         self._backingArray.remove(value)
-        
+        return
+    
     def sort(self, key=None, reverse=False):
         self._backingArray.sort(key, reverse)
-        
+        return
+    
     def __add__(self, y):
         self._backingArray.__add__(y)
         return self
-        
+    
     def __contains__(self, y):
         if isinstance(y, tuple):
             return y in self._pairs()
