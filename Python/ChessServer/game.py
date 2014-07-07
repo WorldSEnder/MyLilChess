@@ -1,12 +1,10 @@
-"""
-Created on 21.02.2014
+"""Created on 21.02.2014
 
-@author: WorldSEnder
-"""
-from responseCodes import GAME_JOINED_SPECTATOR, GAME_JOINED_UNSUCCESFUL,\
+@author: WorldSEnder"""
+from responseCodes import GAME_JOINED_SPECTATOR, GAME_JOINED_UNSUCCESFUL, \
     GAME_STATE_SPECTATOR_JOIN
 __author__ = "WorldSEnder"
-__version__ = 0.1
+__version__ = 0.2
 
 from threading import Thread
 from utils import static_var
@@ -27,20 +25,17 @@ cleanBoard = (".........." +
               ".........." )
 
 class Game(Thread):
-    """
-    Represents a game, is a self-running thread
-    """
+    """Represents a game, is a self-running thread"""
+    
     @static_var('nextId', 0)
     @staticmethod
-    def requestNextGameId(cls):
-        retid = requestNextGameId.nextId
-        requestNextGameId.nextId += 1
+    def requestNextGameId():
+        retid = Game.requestNextGameId.nextId
+        Game.requestNextGameId.nextId += 1
         return retid
     
     def __init__(self, playerWhite, playerBlack):
-        """
-        Constructor
-        """
+        """Constructor"""
         # contains the two players and the spectators
         self._players = [playerWhite, playerBlack]
         self.inProgress = True
@@ -58,17 +53,13 @@ class Game(Thread):
         return
     
     def handleLine(self, line, client):
-        """
-        Handles a single line coming from the client
-        """
+        """Handles a single line coming from the client"""
         if not self.inProgress:
             return
         raise NotImplementedError()
     
     def spectatorJoin(self, spectator):
-        """
-        Joins a spectator into the game. 
-        """
+        """Joins a spectator into the game."""
         if not self.inProgress:
             spectator.sendCode(GAME_JOINED_UNSUCCESFUL)
             return False
@@ -76,28 +67,25 @@ class Game(Thread):
         for client in self._players:
             client.sendCode(GAME_STATE_SPECTATOR_JOIN, spectator.getName())
             nameList.append(client.getName())
+        self._players.append(spectator)
         del client
         spectator.sendCode(GAME_JOINED_SPECTATOR, *nameList)
         return
     
     def _move(self, playerMoving, move):
-        """
-        emulates the current move on the board.
-        Returns a result as a response-code - look at .responseCodes
-        """
+        """emulates the current move on the board.
+        Returns a result as a response-code - look at .responseCodes"""
         raise NotImplementedError()
     
     def interrupt(self):
-        """
-        Interrupts the game, sending a terminate signal to all 
-        clients
-        """
+        """Interrupts the game, sending a terminate signal to all 
+        clients"""
         raise NotImplementedError()
 
+Game.requestNextGameId.nextId = 0
+
 class History:
-    """
-    Represents a game-history
-    """
+    """Represents a game-history"""
     def __init__(self):
         self._backingArray = []
     

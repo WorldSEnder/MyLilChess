@@ -18,7 +18,7 @@ class Server:
         self.serverSock = None
         self.HOST = HOST
         self.PORT = PORT
-        self.BUFFSIZE = 1024
+        self.BUFFSIZE = 8096
         self.gamesThread = []
         self.lobby = Lobby(self.gamesThread)
         return
@@ -27,7 +27,7 @@ class Server:
         if not self.running:
             return
         print('client connected from {}.'.format(clientInfo[1]))
-        client = Client(Connection(clientInfo))
+        client = Client(Connection(clientInfo, self.BUFFSIZE))
         self.lobby.listeningClients.append(client)
         return
     

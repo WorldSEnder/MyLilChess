@@ -1,8 +1,6 @@
-"""
-Created on 21.02.2014
+"""Created on 21.02.2014
 
-@author: WorldSEnder
-"""
+@author: WorldSEnder"""
 from random import Random
 from responseCodes import CHAT_MESSAGE_SERVER_SHUTDOWN
 __author__ = 'WorldSEnder'
@@ -16,13 +14,9 @@ CLIENT_HTTP = 100
 CLIENT_ADMIN = 999
 
 class Client:
-    """
-    Represents a connected client.
-    """
+    """Represents a connected client."""
     def __init__(self, connection):
-        """
-        Constructor
-        """
+        """Constructor"""
         self._connection = connection
         self.gameId = -1
         self.mode = CLIENT_UNDECIDED

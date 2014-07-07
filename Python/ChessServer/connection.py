@@ -1,19 +1,13 @@
-"""
-Created on 21.02.2014
+"""Created on 21.02.2014
 
-@author: WorldSEnder
-"""
+@author: WorldSEnder"""
 __author__ = "WorldSEnder"
 __version__ = 0.1
 
 class Connection():
-    """
-    classdocs
-    """
+    """classdocs"""
     def __init__(self, clientInfo, buffSize=-1):
-        """
-        Constructor
-        """
+        """Constructor"""
         self.socket = clientInfo[0]
         self._fileobject = self.socket.makefile('r', buffSize)
         self.address = clientInfo[1]

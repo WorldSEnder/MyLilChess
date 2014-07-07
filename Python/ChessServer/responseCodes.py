@@ -1,5 +1,4 @@
-"""
-Created on 22.02.2014
+"""Created on 22.02.2014
 This file contains response codes for the appropriate command or as a stream 
 that describes changed game states, etc. 
 Commands are line based messages that a client sends to the server. Each command 
@@ -12,8 +11,8 @@ The eight least significant bits contain an identifier that closer describes
 the response. This may be a sign for a successful or unsuccessful command and
 is more closely described in the appropriate section below.
 
-@author: WorldSEnder
-"""
+@author: WorldSEnder"""
+
 __author__ = 'WorldSEnder'
 __version__ = 0.2
 
